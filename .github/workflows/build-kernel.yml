@@ -15,6 +15,12 @@ jobs:
       run: |
         sudo apt update
         sudo apt install -y flex bison build-essential
+    - name: Install gcc-10
+      run: |
+        sudo apt install -y gcc-10 g++-10
+        sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-10 100
+        sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-10 100
+
 
     - uses: actions/checkout@v4
     - name: Prepare Configuration
