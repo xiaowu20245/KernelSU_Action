@@ -5,12 +5,17 @@ on:
 jobs:
   build:
     name: Build Kernel by ${{ github.actor }}
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     env:
       CCACHE_COMPILERCHECK: "%compiler% -dumpmachine; %compiler% -dumpversion"
       CCACHE_NOHASHDIR: "true"
       CCACHE_HARDLINK: "true"
     steps:
+    - name: Install dependencies
+      run: |
+        sudo apt update
+        sudo apt install -y flex bison build-essential
+
     - uses: actions/checkout@v4
     - name: Prepare Configuration
       run: |
