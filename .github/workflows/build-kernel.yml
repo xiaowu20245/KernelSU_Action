@@ -5,7 +5,7 @@ on:
 jobs:
   build:
     name: Build Kernel by ${{ github.actor }}
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     env:
       CCACHE_COMPILERCHECK: "%compiler% -dumpmachine; %compiler% -dumpversion"
       CCACHE_NOHASHDIR: "true"
@@ -15,6 +15,11 @@ jobs:
       run: |
         sudo apt update
         sudo apt install -y flex bison build-essential
+        sudo apt remove -y device-tree-compiler
+        wget https://mirrors.edge.kernel.org/pub/software/utils/dtc/dtc-1.4.7.tar.xz
+        tar xf dtc-1.4.7.tar.xz
+        cd dtc-1.4.7 && make && sudo make install
+
     - name: Install gcc-10
       run: |
         sudo apt install -y gcc-10 g++-10
