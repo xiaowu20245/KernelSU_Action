@@ -15,10 +15,6 @@ jobs:
       run: |
         sudo apt update
         sudo apt install -y flex bison build-essential
-        sudo apt remove -y device-tree-compiler
-        wget https://mirrors.edge.kernel.org/pub/software/utils/dtc/dtc-1.4.7.tar.xz
-        tar xf dtc-1.4.7.tar.xz
-        cd dtc-1.4.7 && make && sudo make install
 
     - name: Install gcc-10
       run: |
