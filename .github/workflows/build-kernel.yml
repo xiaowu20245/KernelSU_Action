@@ -263,26 +263,8 @@ jobs:
         export PATH=$GITHUB_WORKSPACE/kernel_workspace/clang-aosp/bin:$PATH
         export KBUILD_BUILD_HOST=Github-Action
         export KBUILD_BUILD_USER=$(echo ${{ github.actor }} | tr A-Z a-z)
-        make CC=clang O=out ARCH=${{ env.ARCH }} ${{ env.KERNEL_CONFIG }}
-        yes "" | make CC=clang O=out ARCH=${{ env.ARCH }} oldconfig
-
-        # 3) 如果启用了 KernelSU 的验证参数，则导出
-        if [ ! -z ${{ env.KSU_EXPECTED_SIZE }} ] && [ ! -z ${{ env.KSU_EXPECTED_HASH }} ]; then
-          export KSU_EXPECTED_SIZE=${{ env.KSU_EXPECTED_SIZE }}
-          export KSU_EXPECTED_HASH=${{ env.KSU_EXPECTED_HASH }}
-        fi
-
-        # 4) 正式编译（**注意不要再次带上 ${KERNEL_CONFIG}**，否则会覆盖）
-        make -j$(nproc --all) CC=clang O=out ARCH=${{ env.ARCH }} 
-          ${{ env.CUSTOM_CMDS }} ${{ env.EXTRA_CMDS }} 
-          ${{ env.GCC_64 }} ${{ env.GCC_32 }}
-
-        # 5) 如果启用 ccache，则再运行一次带 ccache 的 make
-        if [ "${{ env.ENABLE_CCACHE }}" = "true" ]; then
-          make -j$(nproc --all) CC="ccache clang" O=out ARCH=${{ env.ARCH }} 
-            ${{ env.CUSTOM_CMDS }} ${{ env.EXTRA_CMDS }} 
-            ${{ env.GCC_64 }} ${{ env.GCC_32 }}
-        fi
+        chmod +x $GITHUB_WORKSPACE/ci/fix_and_build_kernel.sh
+        $GITHUB_WORKSPACE/ci/fix_and_build_kernel.sh "${{ env.KERNEL_CONFIG }}"                      
 
     - name: Check a kernel output files
       run: |
