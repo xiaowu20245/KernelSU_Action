@@ -256,27 +256,32 @@ jobs:
       with:
         key: build-kernel-${{ env.DEVICE }}${{ env.LOCALVERSION }}${{ env.UPLOADNAME }}
         max-size: 2G
-
+  
     - name: Build kernel
       run: |
         cd $GITHUB_WORKSPACE/kernel_workspace/android-kernel
         export PATH=$GITHUB_WORKSPACE/kernel_workspace/clang-aosp/bin:$PATH
         export KBUILD_BUILD_HOST=Github-Action
         export KBUILD_BUILD_USER=$(echo ${{ github.actor }} | tr A-Z a-z)
-        # 先执行 defconfig
         make CC=clang O=out ARCH=${{ env.ARCH }} ${{ env.KERNEL_CONFIG }}
-
-        # 修复你遇到的 Kconfig 新选项问题
         yes "" | make CC=clang O=out ARCH=${{ env.ARCH }} oldconfig
+
+        # 3) 如果启用了 KernelSU 的验证参数，则导出
         if [ ! -z ${{ env.KSU_EXPECTED_SIZE }} ] && [ ! -z ${{ env.KSU_EXPECTED_HASH }} ]; then
           export KSU_EXPECTED_SIZE=${{ env.KSU_EXPECTED_SIZE }}
           export KSU_EXPECTED_HASH=${{ env.KSU_EXPECTED_HASH }}
         fi
-        make -j$(nproc --all) CC=clang O=out ARCH=${{ env.ARCH }} ${{ env.CUSTOM_CMDS }} ${{ env.EXTRA_CMDS }} ${{ env.GCC_64 }} ${{ env.GCC_32 }} ${{ env.KERNEL_CONFIG }}
-        if [ ${{ env.ENABLE_CCACHE }} = true ]; then
-            make -j$(nproc --all) CC="ccache clang" O=out ARCH=${{ env.ARCH }} ${{ env.CUSTOM_CMDS }} ${{ env.EXTRA_CMDS }} ${{ env.GCC_64 }} ${{ env.GCC_32 }}
-        else
-            make -j$(nproc --all) CC=clang O=out ARCH=${{ env.ARCH }} ${{ env.CUSTOM_CMDS }} ${{ env.EXTRA_CMDS }} ${{ env.GCC_64 }} ${{ env.GCC_32 }}
+
+        # 4) 正式编译（**注意不要再次带上 ${KERNEL_CONFIG}**，否则会覆盖）
+        make -j$(nproc --all) CC=clang O=out ARCH=${{ env.ARCH }} 
+          ${{ env.CUSTOM_CMDS }} ${{ env.EXTRA_CMDS }} 
+          ${{ env.GCC_64 }} ${{ env.GCC_32 }}
+
+        # 5) 如果启用 ccache，则再运行一次带 ccache 的 make
+        if [ "${{ env.ENABLE_CCACHE }}" = "true" ]; then
+          make -j$(nproc --all) CC="ccache clang" O=out ARCH=${{ env.ARCH }} 
+            ${{ env.CUSTOM_CMDS }} ${{ env.EXTRA_CMDS }} 
+            ${{ env.GCC_64 }} ${{ env.GCC_32 }}
         fi
 
     - name: Check a kernel output files
