@@ -264,6 +264,20 @@ jobs:
         export KBUILD_BUILD_HOST=Github-Action
         export KBUILD_BUILD_USER=$(echo ${{ github.actor }} | tr A-Z a-z)
         make CC=clang O=out ARCH=${{ env.ARCH }} ${{ env.KERNEL_CONFIG }}
+        # -------------------------
+        # 强制写入 LITTLE/BIG/PRIME CPU MASK
+        # -------------------------
+        CONFIG_FILE=$OUT_DIR/.config
+        
+        # 强制写入十进制值
+        sed -i '/CONFIG_LITTLE_CPU_MASK/d' $CONFIG_FILE
+        sed -i '/CONFIG_BIG_CPU_MASK/d' $CONFIG_FILE
+        sed -i '/CONFIG_PRIME_CPU_MASK/d' $CONFIG_FILE
+        
+        echo "CONFIG_LITTLE_CPU_MASK=15" >> $CONFIG_FILE
+        echo "CONFIG_BIG_CPU_MASK=240" >> $CONFIG_FILE
+        echo "CONFIG_PRIME_CPU_MASK=1" >> $CONFIG_FILE
+        #
         yes "" | make CC=clang O=out ARCH=${{ env.ARCH }} oldconfig
 
         # 3) 如果启用了 KernelSU 的验证参数，则导出
